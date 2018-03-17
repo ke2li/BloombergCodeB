@@ -13,6 +13,7 @@ def run(user, password, * commands):
         rline = sfile.readline()
         while rline:
             print(rline.strip())
+            return rline
             rline = sfile.readline()
 
 def subscribe(user, password):
@@ -29,23 +30,86 @@ def subscribe(user, password):
 
 #parser for parsing server output
 class Parser:
-
-    def __init__(self):
+    def __init__():
 
     #parses output from STATUS and SCAN call to server
     #output should be of form:
-    #
-    def parseStatus():  
+    #[X, Y, DX, DY, MINES[OWNER X Y], PLAYERS[X Y DX DY], BOMBS[X Y]
+    # WORMHOLES[X Y RADIUS OUT_X OUT_Y]]
+    def parseStatus(line): 
+         inputs = line.split()
+         returnlst = []
+         curr = 1
 
+         for curr in range(1,5):
+            returnlst.append(inputs[curr])
 
+         curr = 7
+
+         #mines[OWNER X Y]
+         tempList = []
+         returnlst[4] = []
+         for i in range(inputs[6]):
+            for j in range(curr, curr+3):
+                tempList.append(inputs[j])
+            returnlst[4].append(tempList)
+            curr += 3
+            del tempList[:]
+
+        #players[X Y DW DY]
+        nextStart = curr + 1
+        curr += 2
+        for i in range(nextStart):
+            for j in range(curr, curr+4):
+                tempList.append(inputs[j])
+            returnlst[5].append(tempList)
+            curr+=4
+            del tempList[:]
+
+        #bombs[X Y]
+        nextStart = curr+1
+        curr +=2
+        for i in range(nextStart):
+            for j in range(curr, curr+2):
+                tempList.append(inputs[j])
+            returnlst[6].append(tempList)
+            curr+=2
+            del tempList[:]
+
+        #wormholes[X Y RADIUS OUT_X OUT_Y]
+        nextStart = curr+1
+        curr +=2
+        for i in range(nextStart):
+            for j in range(curr, curr+5):
+                tempList.append(inputs[j])
+            returnlst[7].append(tempList)
+            curr+=5
+            del tempList[:]
     
     #parses output from CONFIGURATION call to server
     #output should be of form:
     #[MapWidth, MapHeight, CaptureRadius, VISIONRADIUS, FRICTION
     #   BRAKEFRICTION, BOMBPLACERADIUS, BOMBEFFECTRADIUS,
     #   BOMBDELAY, BOMBPOWER, SCANRADIUS, SCANDELAY ]
-    def parseConfig():
+    def parseConfig(line):  
+        lst = line.split()
+        returnlst = []
 
+        returnlst[0] = lst[2]
+        returnlst[1] = lst[4]
+        returnlst[2] = lst[6]
+        returnlst[3] = lst[8]
+        returnlst[4] = lst[10]
+        returnlst[5] = lst[12]
+        returnlst[6] = lst[14]
+        returnlst[7] = lst[16]
+        returnlst[8] = lst[18]
+        returnlst[9] = lst[20]
+        returnlst[10] = lst[22]
+        returnlst[11] = lst[24]
+        returnlst[12] = lst[26]
+
+        return returnlst
 
 #countdown timer
 class Timer:
