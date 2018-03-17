@@ -1,6 +1,7 @@
 import socket
 import sys
 import time
+import math
 
 def run(user, password, * commands):
     HOST, PORT = "codebb.cloudapp.net", 17429
@@ -147,6 +148,7 @@ class Logic:
 
     #Aribrary constants
     gridPartitionSize = 3.0/4
+    radiusScaler = 1.3
 
     #CONFIG stuff
     mapWidth = -1
@@ -168,7 +170,7 @@ class Logic:
     selfAccelerations = []
     
     otherPlayerInfo = []    #contains arrays in form (x, y, dx, dy, ax, ay)
-    wormHoleCoords = set()  #contains tuples in form (x, y, radius)
+    wormholeCoords = set()  #contains tuples in form (x, y, radius)
     mineCoords = set()      #contains tuples in form (x, y)
 
     destinationCoords = []
@@ -225,9 +227,29 @@ class Logic:
     #outputs location of most suitable mine to go to [x,y]
     def findBestMine(self):
 
-    #returns list of coordinates outlining path to desired coordinates
+    #returns list of coordinates outlining path to desired coordinates (x,y) from (x0, y0)
     #the first point in the list is the first destination
-    def findPath(self, x, y):
+    def findPath(self, x0, y0, x, y):
+        points = []
+        m = (y-y0+0.0)/(x-x0)
+
+        #check for and avoid wormhole intersections
+        for i : wormholeCoords:
+            if( abs(m*i(0)-i(1)+m*x0+y0+0.0)/math.sqrt(m**2+1) <= i(2)): #if shortest line from center of wormhole to line < wormhole radius
+                 dist = ((i(0)-x0)*(x-x0)+(i(1)-y0)*(y-y0)+0.0)/((x-x0)**2+(y-y0)**2) #a dot b/|a|^2
+                 tempX = x0 + (x-x0)*dist
+                 tempY = y0 + (y-y0)*dist
+                 newX = i(0) + i(2)*(tempX-i(0))/math.sqrt(tempX**2+i(0)**2)*radiusScaler
+                 newY = i(1) + i(2)*(tempY-i(1))/math.sqrt(tempY**2+i(1)**2)*radiusScaler
+                 temp1 = findPath(x0, y0, newX, newY)
+                 temp2 = findPath(newX, newY, x, y)
+                 for i in temp1:
+                     points.append(i)
+                 for i in temp2:
+                     points.append(i)
+                 return points
+        return [[x,y]]
+                 
 
     #Return acceleration and angle to reach destination
     def setCourse(self, x, y, destVx, destVy):
@@ -322,6 +344,14 @@ class Logic:
             findBombTarget()
         if (canScan):
             findScanTarget()
+
+
+def main():
+    logic = Logic()
+    while(True):
+        logic.update()
+
+main()
         
 
 
