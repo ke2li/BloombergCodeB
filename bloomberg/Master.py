@@ -79,6 +79,10 @@ class Logic:
     #USER stuff
     user = 'a'
     password = 'a'
+    parser = Parser()
+
+    #Aribrary constants
+    gridPartitionSize = 3.0/4
 
     #CONFIG stuff
     mapWidth = -1
@@ -99,8 +103,7 @@ class Logic:
     selfVelocities = []
     selfAccelerations = []
     
-    otherPlayerCoords = []
-    otherPlayerVelocities = []
+    otherPlayerInfo = []    #contains arrays in form (x, y, dx, dy, ax, ay)
     wormHoleCoords = set()  #contains tuples in form (x, y, radius)
     mineCoords = set()      #contains tuples in form (x, y)
 
@@ -108,6 +111,11 @@ class Logic:
     tempDestinationCoords = []
     destinationVelocity = []
     destinationAcceleration = []
+
+    #MAP stuff
+    mapVisited = []
+    numHPartitions = -1
+    numVPartitions = -1
 
     #ABILITIES
     canScan = True
@@ -119,7 +127,32 @@ class Logic:
     #                          FUNCTIONS                          #
     #-------------------------------------------------------------#
 
+    def enterConfig(self, info):
+
+    #separate map into grid with squares proportional to scanRadius by gridPartitionSize
+    #the squares won't tile the map perfectly so the actual squares will be computed with size mapDimension/numPartitions
+    def initMapVisited(self):
+        #compute number of partitions
+        self.numHPartitions = self.mapWidth/(self.scanRadius*2*self.gridPartitionSize)
+        self.numVPartitions = self.mapHidth/(self.scanRadius*2*self.gridPartitionSize)
+        
+        #if there is enough extra space left over increase number of partitions by 1
+        if (self.mapWidth - self.scanRadius*2*self.gridPartitionSize*self.numHPartitions > self.scanRadius*self.gridPartitionSize):
+            numHPartitions++
+        if (self.mapHeight - self.scanRadius*2*self.gridPartitionSize*self.numVPartitions > self.scanRadius*self.gridPartitionSize):
+            numVPartitions++
+
+        #create mapVisited
+        for i in range(0, self.numVPartitions):
+            self.mapVisited.append([])
+            for (j in range(0, self.numHPartitions):
+                self.mapVisited[i].append(False)
+
     def __init__(self):
+        self.enterConfig(self.parseConfig(run(self.user, self.password, 'CONFIGURATION')))
+        initMapVisited()
+        
+
         
 
     #predict where the spaceship at x, y will be after t seconds have passed
@@ -143,6 +176,64 @@ class Logic:
     #figure out where to scan
     #scan the place and update information
     def findScanTarget(self):
+        startX = round(self.selfCoords[0]/self.numHPartitions)
+        startY = round(self.selfCoords[1]/self.numVPartitions)
+        if (self.numHPartitions > self.numVPartitions):
+            scanRange = self.numHPartitions
+        else
+            scanrange = self.numVPartitions
+
+        #circular scan
+        for r in range(1,scanRange):
+            #bottom line
+            for x in range(startX-scanRange, startX+scanRange+1):
+                 if (startY-scanRange < 0):
+                     break
+                 if (x >= 0):
+                     if (x < self.numHPartitions):
+                         if (!mapVisited[startY-scanRange][x]):
+                             run(self.user, self.password, "SCAN "+x+" "+(startY-scanRange))
+                             self.scanTimer.start(self.scanDelay)
+                             return
+                     else:
+                         break
+            #top line
+            for x in range(startX-scanRange, startX+scanRange+1):
+                 if (startY+scanRange >= numVPartitions):
+                     break
+                 if (x >= 0):
+                     if (x < self.numHPartitions):
+                         if (!mapVisited[startY-scanRange][x]):
+                             run(self.user, self.password, "SCAN "+x+" "+(startY-scanRange))
+                             self.scanTimer.start(self.scanDelay)
+                             return
+                     else:
+                         break
+            #left line
+            for y in range(startY-scanRange, startY+scanRange+1):
+                 if (startX-scanRange < 0):
+                     break
+                 if (y >= 0):
+                     if (y < self.numVPartitions):
+                         if (!mapVisited[y][startX-scanRange]):
+                             run(self.user, self.password, "SCAN "+(startX-scanRange)+" "+y)
+                             self.scanTimer.start(self.scanDelay)
+                             return
+                     else:
+                         break
+            #right line
+            for y in range(startY-scanRange, startY+scanRange+1):
+                 if (startX+scanRange >= numHPartitions):
+                     break
+                 if (y >= 0):
+                     if (y < self.numVPartitions):
+                         if (!mapVisited[y][startX-scanRange]):
+                             run(self.user, self.password, "SCAN "+(startX-scanRange)+" "+y)
+                             self.scanTimer.start(self.scanDelay)
+                             return
+                     else:
+                         break
+                 
         
     #enter the info list into self fields
     def enterStatusInfo(self, info):
@@ -150,17 +241,24 @@ class Logic:
     
     #update all whereabouts
     def updateStatus(self):
-        
+        self.enterStatusInfo(parser.parseStatus(run(self.user,self.password,'STATUS')))
 
-    def updateTimes(self):
-        this.canScan = this.scanTimer.isFinished()
-        this.canBomb = this.bombTimer.isFinished()
+    def updateTimers(self):
+        self.canScan = self.scanTimer.isFinished()
+        self.canBomb = self.bombTimer.isFinished()
     
     def update(self): #main function 
-        updateStatus()   #get updates
-        tempDestinationCoords = findBestMine(self)
-        updateTimers()   #update scan and bomb timer
-            
+        self.updateStatus()   #get updates
+        mapVisited[round(self.selfCoords[1]/self.numVPartitions)][round(self.selfCoords[0]/self.numHPartitions)] = True #update map visited
+                 
+        self.tempDestinationCoords = findBestMine(self)
+        
+        self.updateTimers()   #update scan and bomb timer
+        if (canBomb):
+            findBombTarget()
+        if (canScan):
+            findScanTarget()
+        
 
 
 
