@@ -113,7 +113,7 @@ class Parser:
     #[MapWidth, MapHeight, CaptureRadius, VISIONRADIUS, FRICTION
     #   BRAKEFRICTION, BOMBPLACERADIUS, BOMBEFFECTRADIUS,
     #   BOMBDELAY, BOMBPOWER, SCANRADIUS, SCANDELAY ]
-    def parseConfig(line):  
+    def parseConfig(trash, line):  
         lst = line.split()
         returnlst = []
 
@@ -129,7 +129,6 @@ class Parser:
         returnlst.append(lst[20])
         returnlst.append(lst[22])
         returnlst.append(lst[24])
-        returnlst.append(lst[26])
 
         return returnlst
 
