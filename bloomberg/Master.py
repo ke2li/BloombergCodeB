@@ -32,112 +32,86 @@ def subscribe(user, password):
 
 #parser for parsing server output
 class Parser:
+    def __init__():
 
     #parses output from STATUS and SCAN call to server
     #output should be of form:
     #[X, Y, DX, DY, MINES[OWNER X Y], PLAYERS[X Y DX DY], BOMBS[X Y]
     # WORMHOLES[X Y RADIUS OUT_X OUT_Y]]
-    def parseStatus(trash, line):
+    def parseStatus(line): 
          inputs = line.split()
          returnlst = []
          curr = 1
-         
 
          for curr in range(1,5):
             returnlst.append(inputs[curr])
-            #print(inputs[curr])
 
          curr = 7
+
          #mines[OWNER X Y]
-         tempList1 = []
-         if int(inputs[6]) is not 0:
-             for i in range(int(inputs[6])):
-                for j in range(curr, curr+3):
-                    #print(input[j])
-                    tempList1.append(inputs[j])
-                returnlst.append(tempList1)
-                curr += 3
-                #del tempList[:]
-         else:
-             returnlst.append(1)
+         tempList = []
+         returnlst[4] = []
+         for i in range(inputs[6]):
+            for j in range(curr, curr+3):
+                tempList.append(inputs[j])
+            returnlst[4].append(tempList)
+            curr += 3
+            del tempList[:]
 
-         #players[X Y DW DY]
-         tempList2 = []
-         nextStart = curr + 1
-         curr += 2
-         if int(inputs[nextStart]) is not 0:
-             for i in range(int(inputs[nextStart])):
-                 for j in range(curr, curr+4):
-                     #print(input[j])
-                     tempList2.append(inputs[j])
-                 returnlst.append(tempList2)
-                 curr+=4
-                 #del tempList[:]
-         else:
-             returnlst.append(-1)
+        #players[X Y DW DY]
+        nextStart = curr + 1
+        curr += 2
+        for i in range(nextStart):
+            for j in range(curr, curr+4):
+                tempList.append(inputs[j])
+            returnlst[5].append(tempList)
+            curr+=4
+            del tempList[:]
 
-         #bombs[X Y]
-         tempList3 = []
-         nextStart = curr+1
-         curr +=2
-         if int(inputs[nextStart]) is not 0:
-             for i in range(int(inputs[nextStart])):
-                 for j in range(curr, curr+2):
-                     #print(input[j])
-                     tempList3.append(inputs[j])
-                 returnlst.append(tempList3)
-                 curr+=2
-                 #del tempList[:]
-         else:
-             returnlst.append(-1)
+        #bombs[X Y]
+        nextStart = curr+1
+        curr +=2
+        for i in range(nextStart):
+            for j in range(curr, curr+2):
+                tempList.append(inputs[j])
+            returnlst[6].append(tempList)
+            curr+=2
+            del tempList[:]
 
-         #wormholes[X Y RADIUS OUT_X OUT_Y]
-         tempList4 = []
-         nextStart = curr+1
-         curr +=2
-         if int(inputs[nextStart]) is not 0:
-             for i in range(int(inputs[nextStart])):
-                for j in range(curr, curr+5):
-                    #print(input[j])
-                    tempList4.append(inputs[j])
-                returnlst[7].append(tempList4)
-                curr+=5
-                #del tempList[:]
-         else:
-             returnlst.append(-1)
-
-         return returnlst
+        #wormholes[X Y RADIUS OUT_X OUT_Y]
+        nextStart = curr+1
+        curr +=2
+        for i in range(nextStart):
+            for j in range(curr, curr+5):
+                tempList.append(inputs[j])
+            returnlst[7].append(tempList)
+            curr+=5
+            del tempList[:]
     
     #parses output from CONFIGURATION call to server
     #output should be of form:
     #[MapWidth, MapHeight, CaptureRadius, VISIONRADIUS, FRICTION
     #   BRAKEFRICTION, BOMBPLACERADIUS, BOMBEFFECTRADIUS,
     #   BOMBDELAY, BOMBPOWER, SCANRADIUS, SCANDELAY ]
-    def parseConfig(trash, line):  
+    def parseConfig(line):  
         lst = line.split()
         returnlst = []
 
-        returnlst.append(lst[2])
-        returnlst.append(lst[4])
-        returnlst.append(lst[6])
-        returnlst.append(lst[8])
-        returnlst.append(lst[10])
-        returnlst.append(lst[12])
-        returnlst.append(lst[14])
-        returnlst.append(lst[16])
-        returnlst.append(lst[18])
-        returnlst.append(lst[20])
-        returnlst.append(lst[22])
-        returnlst.append(lst[24])
+        returnlst[0] = lst[2]
+        returnlst[1] = lst[4]
+        returnlst[2] = lst[6]
+        returnlst[3] = lst[8]
+        returnlst[4] = lst[10]
+        returnlst[5] = lst[12]
+        returnlst[6] = lst[14]
+        returnlst[7] = lst[16]
+        returnlst[8] = lst[18]
+        returnlst[9] = lst[20]
+        returnlst[10] = lst[22]
+        returnlst[11] = lst[24]
+        returnlst[12] = lst[26]
 
         return returnlst
-
-def parseTest():
-    parse = Parser()
-    line = run('a', 'a', "STATUS")
-    print(line.split())
-    lst = parse.parseStatus(line)
-    print(lst[:])
 
 #countdown timer
 class Timer:
@@ -226,6 +200,7 @@ class Logic:
     mineLocked = False
     destinationLocked = False #decided to go to a place but it isn't a mine
     pastTime = time.time()
+    braking = False
 
     #-------------------------------------------------------------#
     #                          FUNCTIONS                          #
@@ -266,12 +241,74 @@ class Logic:
 
     #predict where the spaceship at x, y will be after t seconds have passed
     def prediction(self, x, y, dx, dy, a, angle, t):
+        brake = 1
+        if (braking):
+            brake = brakeFriction
+        nX = x + friction*brakeFriction*dx*t + a*math.cos(angle)*t/2
+        nY = y + friction*brakeFriction*dy*t + a*math.sin(angle)*t/2
+        return (nX, nY)
         
     #outputs location of most suitable mine to go to [x,y]
     #SET MINELOCKED TO TRUE IF MINE IS FOUND
     def findBestMine(self):
+        bestScore = 1000000
+        chosenMineCoords = (-1,-1)
         for i in self.mineCoords:
             if i not in self.ownedMineCoords
+                score = math.sqrt( (self.selfVelocities[0]**2-i(0)+self.selfCoords[0])**2+(self.selfVelocities[1]**2-i(1)+self.selfCoords[1])**2)
+                if (score < bestScore):
+                    bestScore = score
+                    chosenMineCoords = i
+                    mineLocked = True
+        if (mineLocked):
+            return choseMineCoords
+
+        startX = round(self.selfCoords[0]/self.numHPartitions)
+        startY = round(self.selfCoords[1]/self.numVPartitions)
+
+        #circular look for unexplored areas
+        for r in range(1,self.mapWidth):
+            #top line
+            for x in range(startX-r, startX+r+1):
+                 if (startY-r < 0):
+                     break
+                 if (x >= 0):
+                     if (x < self.numHPartitions):
+                         if (not mapVisited[startY-r][x]):
+                             return((x*self.hPartitionSize+self.hPartitionSize/2.0),(startY-r+0.5)*self.vPartitionSize)
+                     else:
+                         break
+            #right line
+            for y in range(startY-r, startY+r+1):
+                 if (startX+r >= numHPartitions):
+                     break
+                 if (y >= 0):
+                     if (y < self.numVPartitions):
+                         if (not mapVisited[y][startX-r]):
+                             return(startX+r+0.5)*self.hPartitionSize,(y*self.vPartitionSize+self.vPartitionSize/2.0))
+                     else:
+                         break
+            #bottom line
+            for x in range(startX-r, startX+r+1):
+                 if (startY+r >= numVPartitions):
+                     break
+                 if (x >= 0):
+                     if (x < self.numHPartitions):
+                         if (not mapVisited[startY-r][x]):
+                             return((x*self.hPartitionSize+self.hPartitionSize/2.0), (startY+r+0.5)*self.vPartitionSize)
+                     else:
+                         break
+            #left line
+            for y in range(startY-r, startY+r+1):
+                 if (startX-r < 0):
+                     break
+                 if (y >= 0):
+                     if (y < self.numVPartitions):
+                         if (not mapVisited[y][startX-r]):
+                             return((startX-r+0.5)*self.hPartitionSize,(y*self.vPartitionSize+self.vPartitionSize/2.0))
+                     else:
+                         break
+
 
     #returns list of coordinates outlining path to desired coordinates (x,y) from (x0, y0)
     #the first point in the list is the first destination
@@ -334,57 +371,58 @@ class Logic:
         #circular scan
         for r in range(1,scanRange):
             #top line
-            for x in range(startX-scanRange, startX+scanRange+1):
-                 if (startY-scanRange < 0):
+            for x in range(startX-r, startX+r+1):
+                 if (startY-r < 0):
                      break
                  if (x >= 0):
                      if (x < self.numHPartitions):
-                         if (not mapVisited[startY-scanRange][x]):
-                             run(self.user, self.password, "SCAN "+(x*self.hPartitionSize+self.hPartitionSize/2.0)+" "+(startY-scanRange+0.5)*self.vPartitionSize)
+                         if (not mapVisited[startY-r][x]):
+                             run(self.user, self.password, "SCAN "+(x*self.hPartitionSize+self.hPartitionSize/2.0)+" "+(startY-r+0.5)*self.vPartitionSize)
                              self.scanTimer.start(self.scanDelay)
-                             mapVisited[x][startY-scanRange] = True
+                             mapVisited[x][startY-r] = True
                              return
                      else:
                          break
             #bottom line
-            for x in range(startX-scanRange, startX+scanRange+1):
-                 if (startY+scanRange >= numVPartitions):
+            for x in range(startX-r, startX+r+1):
+                 if (startY+r >= numVPartitions):
                      break
                  if (x >= 0):
                      if (x < self.numHPartitions):
-                         if (not mapVisited[startY-scanRange][x]):
-                             run(self.user, self.password, "SCAN "+(x*self.hPartitionSize+self.hPartitionSize/2.0)+" "+(startY+scanRange+0.5)*self.vPartitionSize)
+                         if (not mapVisited[startY-r][x]):
+                             run(self.user, self.password, "SCAN "+(x*self.hPartitionSize+self.hPartitionSize/2.0)+" "+(startY+r+0.5)*self.vPartitionSize)
                              self.scanTimer.start(self.scanDelay)
-                             mapVisited[x][startY+scanRange] = True
+                             mapVisited[x][startY+r] = True
                              return
                      else:
                          break
             #left line
-            for y in range(startY-scanRange, startY+scanRange+1):
-                 if (startX-scanRange < 0):
+            for y in range(startY-r, startY+r+1):
+                 if (startX-r < 0):
                      break
                  if (y >= 0):
                      if (y < self.numVPartitions):
-                         if (not mapVisited[y][startX-scanRange]):
-                             run(self.user, self.password, "SCAN "+(startX-scanRange+0.5)*self.hPartitionSize+" "+(y*self.vPartitionSize+self.vPartitionSize/2.0))
+                         if (not mapVisited[y][startX-r]):
+                             run(self.user, self.password, "SCAN "+(startX-r+0.5)*self.hPartitionSize+" "+(y*self.vPartitionSize+self.vPartitionSize/2.0))
                              self.scanTimer.start(self.scanDelay)
-                             mapVisited[startX-scanRange][y] = True
+                             mapVisited[startX-r][y] = True
                              return
                      else:
                          break
             #right line
-            for y in range(startY-scanRange, startY+scanRange+1):
-                 if (startX+scanRange >= numHPartitions):
+            for y in range(startY-r, startY+r+1):
+                 if (startX+r >= numHPartitions):
                      break
                  if (y >= 0):
                      if (y < self.numVPartitions):
-                         if (not mapVisited[y][startX-scanRange]):
-                             run(self.user, self.password, "SCAN "+(startX+scanRange+0.5)*self.hPartitionSize+" "+(y*self.vPartitionSize+self.vPartitionSize/2.0))
+                         if (not mapVisited[y][startX-r]):
+                             run(self.user, self.password, "SCAN "+(startX+r+0.5)*self.hPartitionSize+" "+(y*self.vPartitionSize+self.vPartitionSize/2.0))
                              self.scanTimer.start(self.scanDelay)
-                             mapVisited[startX+scanRange][y] = True
+                             mapVisited[startX+r][y] = True
                              return
                      else:
                          break
+            
                  
         
     #enter the info list into self fields
