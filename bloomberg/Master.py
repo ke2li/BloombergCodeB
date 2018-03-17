@@ -1,6 +1,6 @@
 import socket
 import sys
-
+import time
 
 def run(user, password, * commands):
     HOST, PORT = "codebb.cloudapp.net", 17429
@@ -44,7 +44,30 @@ class Parser:
     #[MapWidth, MapHeight, CaptureRadius, VISIONRADIUS, FRICTION
     #   BRAKEFRICTION, BOMBPLACERADIUS, BOMBEFFECTRADIUS,
     #   BOMBDELAY, BOMBPOWER, SCANRADIUS, SCANDELAY ]
-    def parseConfig():  
+    def parseConfig():
+
+
+#countdown timer
+class Timer:
+    startTime = -1
+    amountTime = -1
+    timesUp = True
+    
+    def __init__(self):
+
+    def start(self, seconds):
+        timesUp = False
+        amountTime = seconds
+        startTime = time.time()
+
+    def isFinished(self):
+        if ((timesUp == True) or (time.time()-startTime >= amountTime)):
+            timesUp = True
+            amountTime = -1
+            startTime = -1
+            return True
+        else:
+            return False
 
 
 #class for all logic related stuff
@@ -52,6 +75,10 @@ class Logic:
     #-------------------------------------------------------------#
     #                     INITIALIZING VARIABLES                  #
     #-------------------------------------------------------------#
+
+    #USER stuff
+    user = 'a'
+    password = 'a'
 
     #CONFIG stuff
     mapWidth = -1
@@ -74,18 +101,26 @@ class Logic:
     
     otherPlayerCoords = []
     otherPlayerVelocities = []
-    wormHoleCoords = []  #contains tuples in form (x, y, radius)
-    mineCoords = []      #contains tuples in form (x, y)
+    wormHoleCoords = set()  #contains tuples in form (x, y, radius)
+    mineCoords = set()      #contains tuples in form (x, y)
 
     destinationCoords = []
     tempDestinationCoords = []
+    destinationVelocity = []
+    destinationAcceleration = []
+
+    #ABILITIES
+    canScan = True
+    scanTimer = Timer()
+    canBomb = True
+    bombTimer = Timer()
 
     #-------------------------------------------------------------#
     #                          FUNCTIONS                          #
     #-------------------------------------------------------------#
 
     def __init__(self):
-
+        
 
     #predict where the spaceship at x, y will be after t seconds have passed
     def prediction(self, x, y, dx, dy, a, angle, t):
@@ -97,23 +132,35 @@ class Logic:
     #the first point in the list is the first destination
     def findPath(self, x, y):
 
-
-    def setDestination(self, x, y, isFinal):
+    #Return acceleration and angle to reach destination
+    def setCourse(self, x, y, destVx, destVy):
         
 
     #figure out where to bomb
-    #output should be of form [x, y, timer]
-    def bombLogic(self):
+    #bomb the place
+    def findBombTarget(self):
 
+    #figure out where to scan
+    #scan the place and update information
+    def findScanTarget(self):
+        
+    #enter the info list into self fields
+    def enterStatusInfo(self, info):
+        
+    
     #update all whereabouts
     def updateStatus(self):
         
-            
+
+    def updateTimes(self):
+        this.canScan = this.scanTimer.isFinished()
+        this.canBomb = this.bombTimer.isFinished()
     
-    def update(self): #main loop that runs
-        while (True):
-            updateStatus()
-            tempDestinationCoords = findBestMine(self)
+    def update(self): #main function 
+        updateStatus()   #get updates
+        tempDestinationCoords = findBestMine(self)
+        updateTimers()   #update scan and bomb timer
+            
 
 
 
