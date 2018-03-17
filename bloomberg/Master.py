@@ -122,15 +122,15 @@ class Timer:
     def __init__(self):
 
     def start(self, seconds):
-        timesUp = False
-        amountTime = seconds
-        startTime = time.time()
+        self.timesUp = False
+        self.amountTime = seconds
+        self.startTime = time.time()
 
     def isFinished(self):
-        if ((timesUp == True) or (time.time()-startTime >= amountTime)):
-            timesUp = True
-            amountTime = -1
-            startTime = -1
+        if ((self.timesUp == True) or (time.time()-startTime >= amountTime)):
+            self.timesUp = True
+            self.amountTime = -1
+            self.startTime = -1
             return True
         else:
             return False
@@ -148,7 +148,7 @@ class Logic:
     parser = Parser()
 
     #Aribrary constants
-    gridPartitionSize = 3.0/4
+    gridPartitionSize = 1
     radiusScaler = 1.3
     BOMB_ERROR = 1.0
 
@@ -187,6 +187,8 @@ class Logic:
     mapVisited = []
     numHPartitions = -1
     numVPartitions = -1
+    hPartitionSize = -1
+    vPartitionSize = -1
 
     #ABILITIES
     canScan = True
@@ -197,6 +199,7 @@ class Logic:
     #SITUATIONAL variables
     mineLocked = False
     destinationLocked = False #decided to go to a place but it isn't a mine
+    pastTime = time.time()
 
     #-------------------------------------------------------------#
     #                          FUNCTIONS                          #
@@ -217,15 +220,20 @@ class Logic:
         if (self.mapHeight - self.scanRadius*2*self.gridPartitionSize*self.numVPartitions > self.scanRadius*self.gridPartitionSize):
             self.numVPartitions += 1
 
+        self.hPartitionSize = self.mapWidth/self.numHPartitions
+        self.vPartitionSize = self.mapHeight/self.numVPartitions
+
         #create mapVisited
         for i in range(0, self.numVPartitions):
             self.mapVisited.append([])
-            for (j in range(0, self.numHPartitions):
+            for j in range(0, self.numHPartitions):
                 self.mapVisited[i].append(False)
+
+        self.pastTime = time.time()
 
     def __init__(self):
         self.enterConfig(self.parseConfig(run(self.user, self.password, 'CONFIGURATION')))
-        initMapVisited()
+        self.initMapVisited()
         self.projectedNextCoords = [0,0] #just to initialize it
         self.path = [0,0]
         
@@ -234,8 +242,10 @@ class Logic:
     def prediction(self, x, y, dx, dy, a, angle, t):
         
     #outputs location of most suitable mine to go to [x,y]
-    #SET MINELOCKED TO YES IF MINE IS FOUND
+    #SET MINELOCKED TO TRUE IF MINE IS FOUND
     def findBestMine(self):
+        for i in self.mineCoords:
+            if i not in self.ownedMineCoords
 
     #returns list of coordinates outlining path to desired coordinates (x,y) from (x0, y0)
     #the first point in the list is the first destination
@@ -267,23 +277,20 @@ class Logic:
 
     #figure out where to bomb
     #bomb the place
-    #targeting priority:
-    #   1 - players heading for owned mines
-    #   2 - players heading for unowned mines
-    #   3 - random players in range
+    #bomb whoever's in range
     def findBombTarget(self):
         #for every opponent visible find where they might be and see if they can be bombed
-        for i : otherPlayerInfo:
-            for t : range (1, bombDelay*20):
+        for i : self.otherPlayerInfo:
+            for t : range (1, self.bombDelay*20):
                  p = prediction(i(0), i(1), i(2), i(3), 0, 0, t*0.05) #opponent projected point
-                 if (math.sqrt((self.selfCoords[0]-p(0))**2+(self.selfCoords[1]-p(1))**2) < (bombPlaceRadius+bombEffectRadius)): #opponent is in range
+                 if (math.sqrt((self.selfCoords[0]-p(0))**2+(self.selfCoords[1]-p(1))**2) < (self.bombPlaceRadius+self.bombEffectRadius)): #opponent is in range
                      dist = sqrt((self.selfCoords[0]-p(0))**2+(self.selfCoords[1]-p(1))**2)
-                     bombDist = max(bombPlaceRadius, dist)
+                     bombDist = max(self.bombPlaceRadius, dist)
                      bP = (self.selfCoords[0]+bombDist*(p(0)-self.selfCoords[0])/dist, self.selfCoords[1]+bombDist*(p(1)-self.selfCoords[1])/dist)
                      selfP = prediction(self.selfCoords[0], self.selfCoords[1], self.selfVelocities[0], self.selfVelocities[1], self.selfAccelerations[0], self.selfAccelerations[1], t*0.05)
                      #make sure won't bomb ourself
                      if (math.sqrt((bP(0)-selfP(0))**2+(bP(1)-selfP(1))**2) > (self.bombEffectRadius):
-                         run(self.user, self.password, "BOMB "+bP(0)+" "+bP(1))
+                         run(self.user, self.password, "BOMB "+bP(0)+" "+bP(1)+" "+t*0.05)
                          return
                 
                  
@@ -307,8 +314,9 @@ class Logic:
                  if (x >= 0):
                      if (x < self.numHPartitions):
                          if (not mapVisited[startY-scanRange][x]):
-                             run(self.user, self.password, "SCAN "+x+" "+(startY-scanRange))
+                             run(self.user, self.password, "SCAN "+(x*self.hPartitionSize+self.hPartitionSize/2.0)+" "+(startY-scanRange+0.5)*self.vPartitionSize)
                              self.scanTimer.start(self.scanDelay)
+                             mapVisited[x][startY-scanRange] = True
                              return
                      else:
                          break
@@ -319,8 +327,9 @@ class Logic:
                  if (x >= 0):
                      if (x < self.numHPartitions):
                          if (not mapVisited[startY-scanRange][x]):
-                             run(self.user, self.password, "SCAN "+x+" "+(startY-scanRange))
+                             run(self.user, self.password, "SCAN "+(x*self.hPartitionSize+self.hPartitionSize/2.0)+" "+(startY+scanRange+0.5)*self.vPartitionSize)
                              self.scanTimer.start(self.scanDelay)
+                             mapVisited[x][startY+scanRange] = True
                              return
                      else:
                          break
@@ -331,8 +340,9 @@ class Logic:
                  if (y >= 0):
                      if (y < self.numVPartitions):
                          if (not mapVisited[y][startX-scanRange]):
-                             run(self.user, self.password, "SCAN "+(startX-scanRange)+" "+y)
+                             run(self.user, self.password, "SCAN "+(startX-scanRange+0.5)*self.hPartitionSize+" "+(y*self.vPartitionSize+self.vPartitionSize/2.0))
                              self.scanTimer.start(self.scanDelay)
+                             mapVisited[startX-scanRange][y] = True
                              return
                      else:
                          break
@@ -343,8 +353,9 @@ class Logic:
                  if (y >= 0):
                      if (y < self.numVPartitions):
                          if (not mapVisited[y][startX-scanRange]):
-                             run(self.user, self.password, "SCAN "+(startX-scanRange)+" "+y)
+                             run(self.user, self.password, "SCAN "+(startX+scanRange+0.5)*self.hPartitionSize+" "+(y*self.vPartitionSize+self.vPartitionSize/2.0))
                              self.scanTimer.start(self.scanDelay)
+                             mapVisited[startX+scanRange][y] = True
                              return
                      else:
                          break
@@ -362,13 +373,15 @@ class Logic:
         self.canScan = self.scanTimer.isFinished()
         self.canBomb = self.bombTimer.isFinished()
     
-    def update(self): #main function 
+    def update(self): #main function
+        self.projectedNextCoords = self.prediction(self.selfCoords[0], self.selfCoords[1], self.selfVelocity[0], self.selfVelocity[1], self.selfAcceleration[0], self.selfAcceleration[1], time.time()-self.pastTime())
+        self.pastTime = time.time()
         self.updateStatus()   #get updates
-        mapVisited[round(self.selfCoords[1]/self.numVPartitions)][round(self.selfCoords[0]/self.numHPartitions)] = True #update map visited
+        self.mapVisited[round(self.selfCoords[1]/self.numVPartitions)][round(self.selfCoords[0]/self.numHPartitions)] = True #update map visited
 
         #compute next mine and path to next mine only if we don't have a mine locked in
-        if (not mineLocked):
-            self.destinationCoords = self.findBestMine(self)
+        if (not self.mineLocked):
+            self.destinationCoords = self.findBestMine()
             self.path = self.findPath(self.selfCoords[0], self.selfCoords[1], self.destinationCoords[0], self.destinationCoords[1])
 
         #calculate velocity we want when we reach final point
@@ -385,17 +398,17 @@ class Logic:
 
         #only unlock mine if we reach it or if we get bombed
         if (len(self.path) == 0):
-            mineLocked = False
+            self.mineLocked = False
         #if the difference between our current coordinates and where we should be as predicted last tick differs by more than BOMB_ERROR,
         #assume we've been bombed
-        if (math.sqrt((self.selfCoords[0]-projectedNextCoords[0])**2+(self.selfCoords[1]-projectedNextCoords[1])**2) > BOMB_ERROR):
-            mineLocked = False
+        if (math.sqrt((self.selfCoords[0]-self.projectedNextCoords[0])**2+(self.selfCoords[1]-self.projectedNextCoords[1])**2) > self.BOMB_ERROR):
+            self.mineLocked = False
         
         self.updateTimers()   #update scan and bomb timer
-        if (canBomb):
-            findBombTarget()
-        if (canScan):
-            findScanTarget()
+        if (self.canBomb):
+            self.findBombTarget()
+        if (self.canScan):
+            self.findScanTarget()
 
 
 def main():
