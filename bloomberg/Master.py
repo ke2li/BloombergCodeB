@@ -117,19 +117,19 @@ class Parser:
         lst = line.split()
         returnlst = []
 
-        returnlst[0] = lst[2]
-        returnlst[1] = lst[4]
-        returnlst[2] = lst[6]
-        returnlst[3] = lst[8]
-        returnlst[4] = lst[10]
-        returnlst[5] = lst[12]
-        returnlst[6] = lst[14]
-        returnlst[7] = lst[16]
-        returnlst[8] = lst[18]
-        returnlst[9] = lst[20]
-        returnlst[10] = lst[22]
-        returnlst[11] = lst[24]
-        returnlst[12] = lst[26]
+        returnlst.append(lst[2])
+        returnlst.append(lst[4])
+        returnlst.append(lst[6])
+        returnlst.append(lst[8])
+        returnlst.append(lst[10])
+        returnlst.append(lst[12])
+        returnlst.append(lst[14])
+        returnlst.append(lst[16])
+        returnlst.append(lst[18])
+        returnlst.append(lst[20])
+        returnlst.append(lst[22])
+        returnlst.append(lst[24])
+        returnlst.append(lst[26])
 
         return returnlst
 
