@@ -67,6 +67,7 @@ class Logic:
     scanRadius = -1
     scanDelay = -1
 
+    #COORDINATE related stuff
     selfCoords = []
     selfVelocities = []
     selfAccelerations = []
@@ -75,6 +76,9 @@ class Logic:
     otherPlayerVelocities = []
     wormHoleCoords = []  #contains tuples in form (x, y, radius)
     mineCoords = []      #contains tuples in form (x, y)
+
+    destinationCoords = []
+    tempDestinationCoords = []
 
     #-------------------------------------------------------------#
     #                          FUNCTIONS                          #
@@ -89,14 +93,27 @@ class Logic:
     #outputs location of most suitable mine to go to [x,y]
     def findBestMine(self):
 
+    #returns list of coordinates outlining path to desired coordinates
+    #the first point in the list is the first destination
+    def findPath(self, x, y):
+
+
+    def setDestination(self, x, y, isFinal):
+        
+
     #figure out where to bomb
     #output should be of form [x, y, timer]
     def bombLogic(self):
+
+    #update all whereabouts
+    def updateStatus(self):
+        
             
     
-    def update: #main loop that runs
-
-
+    def update(self): #main loop that runs
+        while (True):
+            updateStatus()
+            tempDestinationCoords = findBestMine(self)
 
 
 
