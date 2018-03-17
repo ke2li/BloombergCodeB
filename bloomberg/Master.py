@@ -32,86 +32,112 @@ def subscribe(user, password):
 
 #parser for parsing server output
 class Parser:
-    def __init__():
 
     #parses output from STATUS and SCAN call to server
     #output should be of form:
     #[X, Y, DX, DY, MINES[OWNER X Y], PLAYERS[X Y DX DY], BOMBS[X Y]
     # WORMHOLES[X Y RADIUS OUT_X OUT_Y]]
-    def parseStatus(line): 
+    def parseStatus(trash, line):
          inputs = line.split()
          returnlst = []
          curr = 1
+         
 
          for curr in range(1,5):
             returnlst.append(inputs[curr])
+            #print(inputs[curr])
 
          curr = 7
-
          #mines[OWNER X Y]
-         tempList = []
-         returnlst[4] = []
-         for i in range(inputs[6]):
-            for j in range(curr, curr+3):
-                tempList.append(inputs[j])
-            returnlst[4].append(tempList)
-            curr += 3
-            del tempList[:]
+         tempList1 = []
+         if int(inputs[6]) is not 0:
+             for i in range(int(inputs[6])):
+                for j in range(curr, curr+3):
+                    #print(input[j])
+                    tempList1.append(inputs[j])
+                returnlst.append(tempList1)
+                curr += 3
+                #del tempList[:]
+         else:
+             returnlst.append(1)
 
-        #players[X Y DW DY]
-        nextStart = curr + 1
-        curr += 2
-        for i in range(nextStart):
-            for j in range(curr, curr+4):
-                tempList.append(inputs[j])
-            returnlst[5].append(tempList)
-            curr+=4
-            del tempList[:]
+         #players[X Y DW DY]
+         tempList2 = []
+         nextStart = curr + 1
+         curr += 2
+         if int(inputs[nextStart]) is not 0:
+             for i in range(int(inputs[nextStart])):
+                 for j in range(curr, curr+4):
+                     #print(input[j])
+                     tempList2.append(inputs[j])
+                 returnlst.append(tempList2)
+                 curr+=4
+                 #del tempList[:]
+         else:
+             returnlst.append(-1)
 
-        #bombs[X Y]
-        nextStart = curr+1
-        curr +=2
-        for i in range(nextStart):
-            for j in range(curr, curr+2):
-                tempList.append(inputs[j])
-            returnlst[6].append(tempList)
-            curr+=2
-            del tempList[:]
+         #bombs[X Y]
+         tempList3 = []
+         nextStart = curr+1
+         curr +=2
+         if int(inputs[nextStart]) is not 0:
+             for i in range(int(inputs[nextStart])):
+                 for j in range(curr, curr+2):
+                     #print(input[j])
+                     tempList3.append(inputs[j])
+                 returnlst.append(tempList3)
+                 curr+=2
+                 #del tempList[:]
+         else:
+             returnlst.append(-1)
 
-        #wormholes[X Y RADIUS OUT_X OUT_Y]
-        nextStart = curr+1
-        curr +=2
-        for i in range(nextStart):
-            for j in range(curr, curr+5):
-                tempList.append(inputs[j])
-            returnlst[7].append(tempList)
-            curr+=5
-            del tempList[:]
+         #wormholes[X Y RADIUS OUT_X OUT_Y]
+         tempList4 = []
+         nextStart = curr+1
+         curr +=2
+         if int(inputs[nextStart]) is not 0:
+             for i in range(int(inputs[nextStart])):
+                for j in range(curr, curr+5):
+                    #print(input[j])
+                    tempList4.append(inputs[j])
+                returnlst[7].append(tempList4)
+                curr+=5
+                #del tempList[:]
+         else:
+             returnlst.append(-1)
+
+         return returnlst
     
     #parses output from CONFIGURATION call to server
     #output should be of form:
     #[MapWidth, MapHeight, CaptureRadius, VISIONRADIUS, FRICTION
     #   BRAKEFRICTION, BOMBPLACERADIUS, BOMBEFFECTRADIUS,
     #   BOMBDELAY, BOMBPOWER, SCANRADIUS, SCANDELAY ]
-    def parseConfig(line):  
+    def parseConfig(trash, line):  
         lst = line.split()
         returnlst = []
 
-        returnlst[0] = lst[2]
-        returnlst[1] = lst[4]
-        returnlst[2] = lst[6]
-        returnlst[3] = lst[8]
-        returnlst[4] = lst[10]
-        returnlst[5] = lst[12]
-        returnlst[6] = lst[14]
-        returnlst[7] = lst[16]
-        returnlst[8] = lst[18]
-        returnlst[9] = lst[20]
-        returnlst[10] = lst[22]
-        returnlst[11] = lst[24]
-        returnlst[12] = lst[26]
+        returnlst.append(lst[2])
+        returnlst.append(lst[4])
+        returnlst.append(lst[6])
+        returnlst.append(lst[8])
+        returnlst.append(lst[10])
+        returnlst.append(lst[12])
+        returnlst.append(lst[14])
+        returnlst.append(lst[16])
+        returnlst.append(lst[18])
+        returnlst.append(lst[20])
+        returnlst.append(lst[22])
+        returnlst.append(lst[24])
 
         return returnlst
+
+def parseTest():
+    parse = Parser()
+    line = run('a', 'a', "STATUS")
+    print(line.split())
+    lst = parse.parseStatus(line)
+    print(lst[:])
 
 #countdown timer
 class Timer:
